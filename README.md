@@ -9,7 +9,7 @@
 `requests`\
 `python-dotenv`\
 `terminaltables3`\
-Вы можете установить командой:
+Вы можете установить их командой:
 ```bash
 pip install -r requirements.txt
 ```
