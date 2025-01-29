@@ -14,11 +14,11 @@ TOWN = 4
 COUNT = 50
 
 
-def fetch_vacancies_sj(vacancy, page, api_key_sj):
+def fetch_vacancies_sj(programming_language, page, api_key_sj):
     url = 'https://api.superjob.ru/2.0/vacancies/'
 
     params = {
-        'keywords': f'программист {vacancy}',
+        'keywords': f'программист {programming_language}',
         'town': TOWN,
         'not_archive': True,
         'page': page,
@@ -36,11 +36,13 @@ def fetch_vacancies_sj(vacancy, page, api_key_sj):
     return vacancies
 
 
-def predict_rub_salary_sj(vacancy, pages_count, api_key_sj):
+def predict_rub_salary_sj(programming_language, pages_count, api_key_sj):
     avg_salary = None
     vacancies_processed = 0
     for page_number in range(pages_count):
-        vacancies = fetch_vacancies_sj(vacancy, page_number, api_key_sj)
+        vacancies = fetch_vacancies_sj(programming_language, page_number,
+                                       api_key_sj
+                                       )
 
         for vacancy in vacancies['objects']:
             salary_from = vacancy.get('payment_from')
@@ -62,7 +64,7 @@ def fetch_vacancies_hh(programming_language, page):
         'salary': SALARY,
         'page': page,
         'per_page': PER_PAGE,
-        }
+    }
 
     response = requests.get('https://api.hh.ru/vacancies', params=params)
     response.raise_for_status()
@@ -144,10 +146,10 @@ def main():
     salary_statistics_sj = {}
     salary_statistics_hh = {}
 
-    programming_language = ['Python', 'Java',
-                            'JavaScript', 'Swift', 'PHP', 'C++', 'C#', 'Go']
+    programming_languages = ['Python', 'Java',
+                             'JavaScript', 'Swift', 'PHP', 'C++', 'C#', 'Go']
 
-    for language in programming_language:
+    for language in programming_languages:
         avg_salary, vacancies_found_sj, vacancies_processed = predict_rub_salary_sj(
             language, pages_count_sj, api_key_sj
         )
@@ -165,13 +167,13 @@ def main():
             "vacancies_found": vacancies_found,
             "vacancies_processed": len(salaries_avg),
             "average_salary": average_salary,
-            }
+        }
 
         salary_statistics_sj[language] = {
-                "vacancies_found": vacancies_found_sj,
-                "vacancies_processed": vacancies_processed,
-                "average_salary": avg_salary,
-                }
+            "vacancies_found": vacancies_found_sj,
+            "vacancies_processed": vacancies_processed,
+            "average_salary": avg_salary,
+        }
 
     create_table(salary_statistics_sj, name='sj')
     create_table(salary_statistics_hh, name='hh')
