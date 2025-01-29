@@ -38,7 +38,7 @@ def fetch_vacancies_sj(programming_language, page, api_key_sj):
 
 
 def predict_rub_salary_sj(programming_language, api_key_sj):
-    avg_salary = None
+    total_avg_salary = []
     vacancies_processed = 0
     page = 0
 
@@ -52,6 +52,7 @@ def predict_rub_salary_sj(programming_language, api_key_sj):
             salary_to = vacancy.get('payment_to')
             avg_salary = predict_salary(salary_from, salary_to)
             if salary_from or salary_to:
+                total_avg_salary.append(avg_salary)
                 vacancies_processed += 1
 
         vacancies_found_sj = vacancies.get('total')
@@ -61,7 +62,10 @@ def predict_rub_salary_sj(programming_language, api_key_sj):
 
         page += 1
 
-    return avg_salary, vacancies_found_sj, vacancies_processed
+    if total_avg_salary:
+        return int(statistics.mean(total_avg_salary)), vacancies_found_sj, vacancies_processed
+    else:
+        return 0, vacancies_found_sj, vacancies_processed
 
 
 def fetch_vacancies_hh(programming_language, page):
@@ -91,8 +95,6 @@ def find_job_vacancies_hh(programming_language, pages_count):
 
 
 def predict_salary(salary_from, salary_to):
-    if not salary_from and not salary_to:
-        return None
     if not salary_from and not salary_to:
         return None
     elif not salary_from or not salary_from:
