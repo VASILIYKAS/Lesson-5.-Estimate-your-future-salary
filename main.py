@@ -90,13 +90,13 @@ def find_job_vacancies_hh(programming_language, pages_count):
 
 
 def predict_salary(salary_from, salary_to):
-    if salary_from is None and salary_to is None:
+    if not salary_from and not salary_to:
         return None
     if salary_from == 0 and salary_to == 0:
         return None
-    elif salary_from is None or salary_from == 0:
+    elif not salary_from or salary_from == 0:
         return round(salary_to * 0.8)
-    elif salary_to is None or salary_from == 0:
+    elif not salary_to or salary_from == 0:
         return round(salary_from * 1.2)
     else:
         return round((salary_from + salary_to) / 2)
@@ -111,7 +111,7 @@ def predict_rub_salary_hh(programming_language, pages_count):
 
         for vacancy in vacancies['items']:
             salary = vacancy.get('salary')
-            if salary is not None:
+            if salary:
                 salary_from = salary.get('from')
                 salary_to = salary.get('to')
                 avg_salary = predict_salary(salary_from, salary_to)
