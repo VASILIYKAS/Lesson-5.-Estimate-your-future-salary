@@ -31,25 +31,25 @@ def fetch_vacancies_sj(vacancy, page, api_key_sj):
     response = requests.get(url, headers=key, params=params, timeout=60)
     response.raise_for_status()
 
-    vacancies_info = response.json()
+    vacancies = response.json()
 
-    return vacancies_info
+    return vacancies
 
 
 def predict_rub_salary_sj(vacancy, pages_count, api_key_sj):
     avg_salary = None
     vacancies_processed = 0
     for page_number in range(pages_count):
-        vacancies_info = fetch_vacancies_sj(vacancy, page_number, api_key_sj)
+        vacancies = fetch_vacancies_sj(vacancy, page_number, api_key_sj)
 
-        for vacancy in vacancies_info['objects']:
+        for vacancy in vacancies['objects']:
             salary_from = vacancy.get('payment_from')
             salary_to = vacancy.get('payment_to')
             avg_salary = predict_salary(salary_from, salary_to)
             vacancies_processed += 1
             time.sleep(2)
 
-    vacancies_found_sj = vacancies_info.get('total')
+    vacancies_found_sj = vacancies.get('total')
 
     return avg_salary, vacancies_found_sj, vacancies_processed
 
@@ -67,15 +67,15 @@ def fetch_vacancies_hh(programming_language, page):
     response = requests.get('https://api.hh.ru/vacancies', params=params)
     response.raise_for_status()
 
-    vacancies_info = response.json()
+    vacancies = response.json()
 
-    return vacancies_info
+    return vacancies
 
 
 def find_job_vacancies_hh(programming_language, pages_count):
 
-    vacancies_info = fetch_vacancies_hh(programming_language, pages_count)
-    vacancies_found = vacancies_info['found']
+    vacancies = fetch_vacancies_hh(programming_language, pages_count)
+    vacancies_found = vacancies['found']
 
     return vacancies_found
 
@@ -97,10 +97,10 @@ def predict_rub_salary_hh(programming_language, pages_count):
     total_salaries = []
 
     for page in range(pages_count):
-        vacancies_info = fetch_vacancies_hh(programming_language, page)
+        vacancies = fetch_vacancies_hh(programming_language, page)
         time.sleep(1)
 
-        for vacancy in vacancies_info['items']:
+        for vacancy in vacancies['items']:
             salary = vacancy.get('salary')
             if salary is not None:
                 salary_from = salary.get('from')
