@@ -43,15 +43,16 @@ def predict_rub_salary_sj(programming_language, api_key_sj):
     page = 0
 
     while True:
-        vacancies, has_more_pages = fetch_vacancies_sj(programming_language,
-                                                       page, api_key_sj
-                                                       )
-        vacancies_processed += len(vacancies['objects'])
-        
+        vacancies, has_more_pages = fetch_vacancies_sj(
+            programming_language, page, api_key_sj
+        )
+
         for vacancy in vacancies['objects']:
             salary_from = vacancy.get('payment_from')
             salary_to = vacancy.get('payment_to')
             avg_salary = predict_salary(salary_from, salary_to)
+            if salary_from or salary_to:
+                vacancies_processed += 1
 
         vacancies_found_sj = vacancies.get('total')
 
@@ -104,6 +105,7 @@ def predict_salary(salary_from, salary_to):
 
 def predict_rub_salary_hh(programming_language, pages_count):
     total_salaries = []
+    vacancies_processed = 0
 
     for page in range(pages_count):
         vacancies = fetch_vacancies_hh(programming_language, page)
@@ -116,8 +118,9 @@ def predict_rub_salary_hh(programming_language, pages_count):
                 salary_to = salary.get('to')
                 avg_salary = predict_salary(salary_from, salary_to)
                 total_salaries.append(avg_salary)
+                vacancies_processed += 1
 
-    return total_salaries
+    return total_salaries, vacancies_processed
 
 
 def create_table(statistics_vacancy, name):
@@ -156,12 +159,14 @@ def main():
                              'JavaScript', 'Swift', 'PHP', 'C++', 'C#', 'Go']
 
     for language in programming_languages:
-        avg_salary, vacancies_found_sj, vacancies_processed = predict_rub_salary_sj(
+        avg_salary, vacancies_found_sj, vacancies_processed_sj = predict_rub_salary_sj(
             language, api_key_sj
         )
 
         vacancies_found = find_job_vacancies_hh(language, pages_count_hh)
-        salaries_avg = predict_rub_salary_hh(language, pages_count_hh)
+        salaries_avg, vacancies_processed_hh = predict_rub_salary_hh(
+            language, pages_count_hh
+        )
 
         if salaries_avg:
             average_salary = int(statistics.mean(salaries_avg))
@@ -170,13 +175,13 @@ def main():
 
         salary_statistics_hh[language] = {
             "vacancies_found": vacancies_found,
-            "vacancies_processed": len(salaries_avg),
+            "vacancies_processed": vacancies_processed_hh,
             "average_salary": average_salary,
         }
 
         salary_statistics_sj[language] = {
             "vacancies_found": vacancies_found_sj,
-            "vacancies_processed": vacancies_processed,
+            "vacancies_processed": vacancies_processed_sj,
             "average_salary": avg_salary,
         }
 
