@@ -32,26 +32,33 @@ def fetch_vacancies_sj(programming_language, page, api_key_sj):
     response.raise_for_status()
 
     vacancies = response.json()
+    has_more_pages = vacancies['more']
 
-    return vacancies
+    return vacancies, has_more_pages
 
 
-def predict_rub_salary_sj(programming_language, pages_count, api_key_sj):
+def predict_rub_salary_sj(programming_language, api_key_sj):
     avg_salary = None
     vacancies_processed = 0
-    for page_number in range(pages_count):
-        vacancies = fetch_vacancies_sj(programming_language, page_number,
-                                       api_key_sj
-                                       )
+    page = 0
 
+    while True:
+        vacancies, has_more_pages = fetch_vacancies_sj(programming_language,
+                                                       page, api_key_sj
+                                                       )
+        vacancies_processed += len(vacancies['objects'])
+        
         for vacancy in vacancies['objects']:
             salary_from = vacancy.get('payment_from')
             salary_to = vacancy.get('payment_to')
             avg_salary = predict_salary(salary_from, salary_to)
-            vacancies_processed += 1
-            time.sleep(2)
 
-    vacancies_found_sj = vacancies.get('total')
+        vacancies_found_sj = vacancies.get('total')
+
+        if not has_more_pages:
+            break
+
+        page += 1
 
     return avg_salary, vacancies_found_sj, vacancies_processed
 
@@ -88,11 +95,11 @@ def predict_salary(salary_from, salary_to):
     if salary_from == 0 and salary_to == 0:
         return None
     elif salary_from is None or salary_from == 0:
-        return salary_to * 0.8
+        return round(salary_to * 0.8)
     elif salary_to is None or salary_from == 0:
-        return salary_from * 1.2
+        return round(salary_from * 1.2)
     else:
-        return (salary_from + salary_to) / 2
+        return round((salary_from + salary_to) / 2)
 
 
 def predict_rub_salary_hh(programming_language, pages_count):
@@ -140,7 +147,6 @@ def create_table(statistics_vacancy, name):
 def main():
     load_dotenv()
     api_key_sj = os.environ['SECRET_KEY']
-    pages_count_sj = 2
     pages_count_hh = 18
 
     salary_statistics_sj = {}
@@ -151,9 +157,8 @@ def main():
 
     for language in programming_languages:
         avg_salary, vacancies_found_sj, vacancies_processed = predict_rub_salary_sj(
-            language, pages_count_sj, api_key_sj
+            language, api_key_sj
         )
-        time.sleep(2)
 
         vacancies_found = find_job_vacancies_hh(language, pages_count_hh)
         salaries_avg = predict_rub_salary_hh(language, pages_count_hh)
