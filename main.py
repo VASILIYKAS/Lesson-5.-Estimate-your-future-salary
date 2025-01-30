@@ -139,7 +139,7 @@ def create_table(statistics_vacancy, name):
         ])
 
     table = AsciiTable(table_data, title)
-    print(table.table)
+    return table.table
 
 
 def main():
@@ -179,8 +179,8 @@ def main():
             "average_salary": avg_salary,
         }
 
-    create_table(salary_statistics_sj, name='sj')
-    create_table(salary_statistics_hh, name='hh')
+    print(create_table(salary_statistics_sj, name='sj'))
+    print(create_table(salary_statistics_hh, name='hh'))
 
 
 if __name__ == "__main__":
