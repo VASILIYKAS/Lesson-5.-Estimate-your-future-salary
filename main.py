@@ -130,12 +130,12 @@ def create_table(statistics_vacancy, name):
         ]
     ]
 
-    for language, data in statistics_vacancy.items():
+    for language, vacancy in statistics_vacancy.items():
         table_data.append([
             language,
-            data["vacancies_found"],
-            data["vacancies_processed"],
-            data["average_salary"],
+            vacancy["vacancies_found"],
+            vacancy["vacancies_processed"],
+            vacancy["average_salary"],
         ])
 
     table = AsciiTable(table_data, title)
