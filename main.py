@@ -38,8 +38,7 @@ def fetch_vacancies_sj(programming_language, page, api_key_sj):
 
 
 def predict_rub_salary_sj(programming_language, api_key_sj):
-    total_avg_salary = []
-    vacancies_processed = 0
+    total_avg_salaries = []
     page = 0
 
     while True:
@@ -52,8 +51,9 @@ def predict_rub_salary_sj(programming_language, api_key_sj):
             salary_to = vacancy.get('payment_to')
             avg_salary = predict_salary(salary_from, salary_to)
             if salary_from or salary_to:
-                total_avg_salary.append(avg_salary)
-                vacancies_processed += 1
+                total_avg_salaries.append(avg_salary)
+
+        vacancies_processed = len(total_avg_salaries)
 
         vacancies_found_sj = vacancies.get('total')
 
@@ -62,10 +62,11 @@ def predict_rub_salary_sj(programming_language, api_key_sj):
 
         page += 1
 
-    if total_avg_salary:
-        return int(statistics.mean(total_avg_salary)), vacancies_found_sj, vacancies_processed
+    if total_avg_salaries:
+        average_salary = int(statistics.mean(total_avg_salaries))
     else:
-        return 0, vacancies_found_sj, vacancies_processed
+        average_salary = 0
+    return average_salary, vacancies_found_sj, vacancies_processed
 
 
 def fetch_vacancies_hh(programming_language, page):
@@ -75,7 +76,6 @@ def fetch_vacancies_hh(programming_language, page):
         'period': PERIOD,
         'salary': SALARY,
         'page': page,
-        'per_page': PER_PAGE,
     }
 
     response = requests.get('https://api.hh.ru/vacancies', params=params)
@@ -83,8 +83,9 @@ def fetch_vacancies_hh(programming_language, page):
 
     vacancies = response.json()
     vacancies_found = vacancies['found']
+    pages_found = vacancies.get('pages')
 
-    return vacancies, vacancies_found
+    return vacancies, vacancies_found, pages_found
 
 
 def predict_salary(salary_from, salary_to):
@@ -98,12 +99,15 @@ def predict_salary(salary_from, salary_to):
         return round((salary_from + salary_to) / 2)
 
 
-def predict_rub_salary_hh(programming_language, pages_count):
+def predict_rub_salary_hh(programming_language):
     total_salaries = []
     vacancies_processed = 0
+    page = 0
 
-    for page in range(pages_count):
-        vacancies, vacancies_found = fetch_vacancies_hh(programming_language, page)
+    while True:
+        vacancies, vacancies_found, pages_found = fetch_vacancies_hh(
+            programming_language, page
+            )
         time.sleep(1)
 
         for vacancy in vacancies['items']:
@@ -113,7 +117,13 @@ def predict_rub_salary_hh(programming_language, pages_count):
                 salary_to = salary.get('to')
                 avg_salary = predict_salary(salary_from, salary_to)
                 total_salaries.append(avg_salary)
-                vacancies_processed += 1
+
+        if vacancies_processed >= 1990 or page >= pages_found - 1:
+            break
+
+        page += 1
+
+        vacancies_processed = len(total_salaries)
 
     return total_salaries, vacancies_processed, vacancies_found
 
@@ -144,8 +154,7 @@ def create_table(statistics_vacancy, name):
 
 def main():
     load_dotenv()
-    api_key_sj = os.environ['SECRET_KEY']
-    pages_count_hh = 18
+    api_key_sj = os.environ['API_KEY_SJ']
 
     salary_statistics_sj = {}
     salary_statistics_hh = {}
@@ -157,9 +166,8 @@ def main():
         avg_salary, vacancies_found_sj, vacancies_processed_sj = predict_rub_salary_sj(
             language, api_key_sj
         )
-
         salaries_avg, vacancies_processed_hh, vacancies_found = predict_rub_salary_hh(
-            language, pages_count_hh
+            language
         )
 
         if salaries_avg:
