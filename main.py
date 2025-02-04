@@ -53,14 +53,14 @@ def predict_rub_salary_sj(programming_language, api_key_sj):
             if salary_from or salary_to:
                 total_avg_salaries.append(avg_salary)
 
-        vacancies_processed = len(total_avg_salaries)
-
         vacancies_found_sj = vacancies.get('total')
 
         if not has_more_pages:
             break
-
+    
         page += 1
+
+    vacancies_processed = len(total_avg_salaries)
 
     if total_avg_salaries:
         average_salary = int(statistics.mean(total_avg_salaries))
@@ -118,12 +118,12 @@ def predict_rub_salary_hh(programming_language):
                 avg_salary = predict_salary(salary_from, salary_to)
                 total_salaries.append(avg_salary)
 
-        if vacancies_processed >= 1990 or page >= pages_found - 1:
+        if page >= pages_found - 1:
             break
 
         page += 1
 
-        vacancies_processed = len(total_salaries)
+    vacancies_processed = len(total_salaries)
 
     return total_salaries, vacancies_processed, vacancies_found
 
